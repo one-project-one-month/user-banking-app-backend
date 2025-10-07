@@ -24,24 +24,15 @@ services:
       - banknet
     ports:
       - "3001:3001"
-      - "9093:9093"
+      - "9098:9098"
     environment:
       - DB_URL=${CORPORATE_DB_URL}
       - DB_USERNAME=${CORPORATE_DB_USERNAME}
       - DB_PASSWORD=${CORPORATE_DB_PASSWORD}
 
-  gateway-service:
-    build: ../gateway-service
-    depends_on:
-      - nickname-service
-    networks:
-      - banknet
-    ports:
-      - "8080:8080"
-
 networks:
   banknet:
-    driver: bridge
+    external: true
 
 volumes:
   postgres_data:

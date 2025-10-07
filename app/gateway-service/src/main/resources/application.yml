@@ -1,8 +1,0 @@
-server:
-  port: 8080
-
-grpc:
-  client:
-    nickname-service:
-      address: 'static://localhost:9093'
-      negotiation-type: plaintext
