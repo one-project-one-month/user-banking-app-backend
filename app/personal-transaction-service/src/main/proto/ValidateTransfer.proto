@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package com.personalbanking.validateTransfer;
+
+option java_multiple_files = true;
+option java_package = "com.personalbanking.validateTransfer.grpc";
+option java_outer_classname = "ValidateTransferProto";
+
+service ValidateTransferService{
+    rpc ValidateTransfer(ValidateTransferRequest) returns (GrpcValidateTransferResponse);
+}
+
+message ValidateTransferRequest{
+    string fromAccountId = 1;
+    string toAccountId = 2;
+}
+
+message AccountTypeResponse{
+    string name = 1;
+    string code = 2;
+}
+
+message ValidateTransferResponse{
+    string accountNumber = 1;
+    string username = 2;
+    string email = 3;
+    int64 currentBalance = 4;
+    AccountTypeResponse accountType = 5;
+}
+
+message GrpcValidateTransferResponse{
+    ValidateTransferResponse fromAccountDetails = 1;
+    ValidateTransferResponse toAccountDetails = 2;
+}
