@@ -14,6 +14,48 @@ spring:
       schema-locations: classpath:schema.sql
       data-locations: classpath:data.sql
 
+
+#    for testing
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/personal_banking
+#    username: postgres
+#    password: admin
+#    driverClassName: org.postgresql.Driver
+
+
 grpc:
   server:
     port: 7095
+
+
+#  CREATE TABLE user_account (
+#  id BIGSERIAL PRIMARY KEY,
+#  username VARCHAR(255) NOT NULL UNIQUE,
+#  email VARCHAR(255) NOT NULL UNIQUE,
+#  password VARCHAR(255) NOT NULL,
+#  profile_id BIGINT,
+#  role_id BIGINT,
+#  created_at VARCHAR(255) DEFAULT TO_CHAR(NOW(), 'YYYY-MM-DD HH24:MI:SS'),
+#  updated_at VARCHAR(255) DEFAULT TO_CHAR(NOW(), 'YYYY-MM-DD HH24:MI:SS')
+#  );
+#  ALTER TABLE user_account
+#  ADD CONSTRAINT fk_user_account_profile_detail
+#  FOREIGN KEY (profile_id) REFERENCES profile_detail(id);
+#  ALTER TABLE user_account
+#  ADD CONSTRAINT fk_user_role
+#  FOREIGN KEY (role_id) REFERENCES role(id);
+
+#  INSERT INTO user_account (id, username, email, password) VALUES (456, 'ethan', 'ethan@example.com', 'pass456');
+#  INSERT INTO user_account (id, username, email, password) VALUES (123, 'charlie', 'charlie@example.com', 'pass456');
+#  INSERT INTO user_account (id, username, email, password) VALUES (789, 'floyd', 'floyd@example.com', 'pass456');
+#  INSERT INTO user_account (id, username, email, password) VALUES (999, 'danny', 'Danny@example.com', 'pass456');
+
+
+#SELECT ad.account_number,ua.username,ua.email,ad.current_balance,at.name,at.code
+#FROM account_detail ad
+#JOIN user_account ua ON ad.user_id=ua.id
+#JOIN account_type at ON ad.account_type_id=at.id
+#WHERE ad.account_number='ACC2001';
+
+
+
