@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package com.personalbanking.personaltransaction;
+
+option java_package = "com.personalbanking.personaltransaction.proto.nickname_transfer";
+option java_outer_classname = "NicknameTransferProto";
+option java_multiple_files = true;
+
+service NicknameTransferService {
+  rpc prepareTransferByNickname(PrepareTransferByNicknameRequest) returns (PrepareTransferByNicknameResponse);
+}
+
+message PrepareTransferByNicknameRequest {
+  int64 nickname_id = 1;
+}
+
+message PrepareTransferByNicknameResponse {
+  bool success = 1;
+  string message = 2;
+  string transaction_id = 3;
+  string status = 4;
+}

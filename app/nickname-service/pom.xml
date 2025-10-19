@@ -84,12 +84,19 @@
     </dependencies>
 
     <build>
+    	  <extensions>
+		    <extension>
+		      <groupId>kr.motd.maven</groupId>
+		      <artifactId>os-maven-plugin</artifactId>
+		      <version>1.7.1</version>
+		    </extension>
+		  </extensions>
         <plugins>
             <!-- Protobuf plugin inherited from parent, just enable -->
-            <plugin>
+           <!--<plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
-            </plugin>
+            </plugin>--> 
 
             <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
@@ -97,7 +104,7 @@
                 <version>0.6.1</version>
                 <configuration>
                     <!-- Path to the proto files in nickname-service -->
-                    <protoSourceRoot>${project.basedir}/protos</protoSourceRoot>
+                    <protoSourceRoot>${project.basedir}/src/main/proto</protoSourceRoot>
                     <protocArtifact>
                         com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}
                     </protocArtifact>

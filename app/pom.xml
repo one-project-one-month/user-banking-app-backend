@@ -15,7 +15,7 @@
         <module>nickname-service</module>
         <module>personal-transaction-service</module>
         <module>personal-user-service</module>
-        <module>scanPayment-service</module>
+       <!-- <module>scanPayment-service</module> -->
     </modules>
 
     <parent>
