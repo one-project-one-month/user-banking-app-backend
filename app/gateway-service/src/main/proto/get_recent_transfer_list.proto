@@ -1,0 +1,27 @@
+syntax="proto3";
+package com.personalbanking.GetRecentTransferList;
+
+option java_multiple_files=true;
+option java_package="com.personalbanking.GetRecentTransferList";
+option java_outer_classname="getrecenttransferlist";
+
+service GetRecentTransferList{
+  rpc GetRecentTransferList(GetRecentTransferListRequest) returns (GetRecentTransferListResponse);
+}
+message GetRecentTransferListRequest{
+
+}
+message GetRecentTransferListResponse{
+  repeated GetUser getUser=1;
+  repeated GetAccount getAccount=2;
+}
+message GetUser{
+  int64 id=1;
+  string name=2;
+}
+message GetAccount{
+  int64 id=1;
+  string accountNumber=2;
+  double balance=3;
+
+}
