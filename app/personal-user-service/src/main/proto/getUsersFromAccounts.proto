@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package com.personalbanking.personalUser;
+
+option java_package = "com.personalbanking.personalUser.grpc";
+option java_outer_classname = "GetUsersFromAccountsProto";
+option java_multiple_files = true;
+
+service GetFromAccountsService {
+  rpc GetFromAccounts (GetFromAccountsRequest) returns (GetFromAccountsResponse) {}
+}
+
+message GetFromAccountsRequest {}
+
+message FromAccountOption {
+  int64 id = 1;
+  string account_number = 2;
+  double balance = 3;
+}
+
+message FromAccountData {
+  repeated FromAccountOption from_account_options = 1;
+}
+
+message GetFromAccountsResponse {
+  FromAccountData data = 1;
+}
+

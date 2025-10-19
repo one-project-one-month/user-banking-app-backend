@@ -9,3 +9,6 @@ grpc:
     personal-transaction-service:
       address: 'static://personal-transaction-service:7095'
       negotiation-type: plaintext
+    personal-user-service:
+      address: 'static://localhost:7094'
+      negotiation-type: plaintext

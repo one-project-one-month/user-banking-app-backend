@@ -10,4 +10,3 @@ CREATE TABLE nicknames (
     updated_by BIGINT,
     UNIQUE (from_account_id, to_account_id)
 );
-
