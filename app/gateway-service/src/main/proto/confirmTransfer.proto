@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package com.personalbanking.confirmTransfer;
+
+option java_multiple_files = true;
+option java_package = "com.personalbanking.confirmTransfer.grpc";
+option java_outer_classname = "ConfirmTransferProto";
+
+service ConfirmTransferService {
+    rpc ConfirmTransfer(ConfirmTransferRequest) returns (ConfirmTransferResponse);
+}
+
+message ConfirmTransferRequest {
+    int64 fromAccountId = 1;
+    int64 toAccountId = 2;
+    double amount = 3;
+    string note = 4;
+    string pin = 5;
+}
+
+message ConfirmTransferResponse {}
