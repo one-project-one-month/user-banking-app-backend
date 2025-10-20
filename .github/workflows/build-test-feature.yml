@@ -1,100 +1,119 @@
-name: Smart CI for Dynamic Maven Modules
+# Replace the detect & build steps in your job with this block
+- name: 🧩 Checkout repository
+  uses: actions/checkout@v4
+  with:
+    fetch-depth: 0
 
-on:
-  push:
-    branches:
-      - dev
-      - 'ft/*'
-  pull_request:
-    branches:
-      - dev
-      - main
+- name: ☕ Set up JDK 17
+  uses: actions/setup-java@v4
+  with:
+    distribution: temurin
+    java-version: 17
+    cache: maven
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+- name: 🔍 Detect changed or new services
+  id: detect
+  shell: bash
+  run: |
+    set -euo pipefail
+    echo "Detecting changed or new services..."
+    
+    # Determine base commit depending on event type
+    # For push events use github.event.before
+    # For pull_request use github.event.pull_request.base.sha
+    if [ "${{ github.event_name }}" = "pull_request" ]; then
+      BASE_COMMIT="${{ github.event.pull_request.base.sha }}"
+      echo "Event: pull_request"
+    else
+      BASE_COMMIT="${{ github.event.before }}"
+      echo "Event: push"
+    fi
+    
+    # HEAD commit is the workflow commit
+    HEAD_COMMIT="${{ github.sha }}"
+    
+    echo "BASE_COMMIT: $BASE_COMMIT"
+    echo "HEAD_COMMIT: $HEAD_COMMIT"
+    
+    # Ensure base commit is available locally
+    git fetch origin $BASE_COMMIT --depth=1 || true
+    git fetch origin $HEAD_COMMIT --depth=1 || true
+    
+    # List existing modules that have a pom.xml (under app/)
+    EXISTING_MODULES=$(find app -mindepth 1 -maxdepth 1 -type d -exec test -f "{}/pom.xml" ';' -print | xargs -n1 basename || true)
+    echo "Existing modules (app/* with pom.xml):"
+    echo "$EXISTING_MODULES"
+    
+    # If base commit is invalid (e.g. first push), fall back to initial commit
+    if ! git rev-parse --verify "$BASE_COMMIT" >/dev/null 2>&1; then
+      echo "Base commit $BASE_COMMIT not found locally — using root commit as base"
+      BASE_COMMIT=$(git rev-list --max-parents=0 HEAD)
+      echo "New base: $BASE_COMMIT"
+    fi
+    
+    # Get changed files between base and head (explicit two-dot range)
+    CHANGED_PATHS=$(git diff --name-only "$BASE_COMMIT..$HEAD_COMMIT" -- 'app/*' || true)
+    echo "Raw changed paths (relative to repo root):"
+    echo "$CHANGED_PATHS"
+    
+    # Map changed paths to top-level service dirs under app/
+    CHANGED_SERVICES=$(echo "$CHANGED_PATHS" | awk -F'/' '{ if ($1=="app") print $2 }' | sort -u || true)
+    echo "Services detected from changed paths:"
+    echo "$CHANGED_SERVICES"
+    
+    # Find services present in base branch (to identify newly added services)
+    BASE_SERVICES=$(git ls-tree -d --name-only "$BASE_COMMIT" app 2>/dev/null | xargs -n1 basename || true)
+    echo "Services present in base commit:"
+    echo "$BASE_SERVICES"
+    
+    # New services = exist now but not in base
+    NEW_SERVICES=$(comm -13 <(echo "$BASE_SERVICES" | sort) <(echo "$EXISTING_MODULES" | sort) || true)
+    echo "New services (present now but not in base):"
+    echo "$NEW_SERVICES"
+    
+    # Combine changed + new, filter to only EXISTING_MODULES (ignore deleted or missing dirs)
+    MODULES=$(printf "%s\n%s\n" "$CHANGED_SERVICES" "$NEW_SERVICES" | sort -u | grep -Fx -f <(echo "$EXISTING_MODULES") || true)
+    
+    if [ -z "$MODULES" ]; then
+      echo "⚠️ No changed or new modules detected."
+      echo "modules=" >> $GITHUB_OUTPUT
+    else
+      echo "✅ Changed or new modules to build:"
+      echo "$MODULES"
+      # write as multiline output
+      {
+        echo "modules<<EOF"
+        echo "$MODULES"
+        echo "EOF"
+      } >> $GITHUB_OUTPUT
+    fi
 
-    steps:
-      - name: 🧩 Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+- name: 🚀 Build and Test Changed/New Modules
+  if: steps.detect.outputs.modules != ''
+  shell: bash
+  run: |
+    set -euo pipefail
+    echo "Modules to build (raw output):"
+    echo "${{ steps.detect.outputs.modules }}"
+    
+    cd app
+    
+    # read modules line-by-line and build only if pom.xml exists
+    echo "${{ steps.detect.outputs.modules }}" | while IFS= read -r module; do
+      module=$(echo "$module" | xargs) # trim whitespace
+      if [ -z "$module" ]; then
+        continue
+      fi
+      if [ -f "$module/pom.xml" ]; then
+        echo "🔧 Building $module..."
+        mvn -f "$module/pom.xml" -q clean verify -B
+      else
+        echo "⚠️ Skipping $module (pom.xml not found)"
+      fi
+    done
 
-      - name: ☕ Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 17
-          cache: maven
-
-      - name: 🔍 Detect changed or new services
-        id: detect
-        run: |
-          echo "Detecting changed or new services..."
-          git fetch origin --quiet
-
-          BASE_BRANCH="origin/dev"
-          CURRENT_BRANCH=${GITHUB_REF##*/}
-
-          # Detect all existing Maven modules under app/
-          EXISTING_MODULES=$(find app -mindepth 1 -maxdepth 1 -type d -exec test -f "{}/pom.xml" ';' -print | xargs -n1 basename)
-          echo "✅ Existing modules: $EXISTING_MODULES"
-
-          if [[ "$CURRENT_BRANCH" == ft/* || "$CURRENT_BRANCH" == "dev" ]]; then
-            if ! git rev-parse --verify $BASE_BRANCH >/dev/null 2>&1; then
-              BASE_BRANCH=$(git rev-list --max-parents=0 HEAD)
-            fi
-
-            CHANGED_PATHS=$(git diff --name-only $BASE_BRANCH...HEAD | grep '^app/' || true)
-            CHANGED_SERVICES=$(echo "$CHANGED_PATHS" | grep -Eo '^app/[^/]+' | cut -d'/' -f2 | sort -u || true)
-
-            BASE_SERVICES=$(git ls-tree -d --name-only $BASE_BRANCH app 2>/dev/null || true)
-            NEW_SERVICES=$(comm -13 <(echo "$BASE_SERVICES" | sort) <(echo "$EXISTING_MODULES" | sort) || true)
-
-            MODULES=$(echo -e "$CHANGED_SERVICES\n$NEW_SERVICES" | sort -u | grep -Fx -f <(echo "$EXISTING_MODULES") || true)
-
-            if [ -z "$MODULES" ]; then
-              echo "⚠️ No changed or new modules detected."
-              echo "modules=" >> $GITHUB_OUTPUT
-            else
-              echo "✅ Changed or new modules:"
-              echo "$MODULES"
-              {
-                echo "modules<<EOF"
-                echo "$MODULES"
-                echo "EOF"
-              } >> $GITHUB_OUTPUT
-            fi
-          else
-            echo "🧩 Pull request detected → build all modules."
-            {
-              echo "modules<<EOF"
-              echo "$EXISTING_MODULES"
-              echo "EOF"
-            } >> $GITHUB_OUTPUT
-          fi
-
-      - name: 🚀 Build and Test Changed/New Modules
-        if: steps.detect.outputs.modules != ''
-        run: |
-          echo "Building modules:"
-          echo "${{ steps.detect.outputs.modules }}"
-
-          cd app
-
-          # Safely read multi-line output into an array
-          echo "${{ steps.detect.outputs.modules }}" | while IFS= read -r module; do
-            module=$(echo "$module" | xargs) # trim spaces
-            if [ -n "$module" ] && [ -f "$module/pom.xml" ]; then
-              echo "🔧 Building $module..."
-              mvn -f "$module/pom.xml" clean verify -B
-            else
-              echo "⚠️ Skipping $module (no pom.xml found or empty name)"
-            fi
-          done
-
-      - name: 🧱 Full Build (no detected modules)
-        if: steps.detect.outputs.modules == ''
-        run: |
-          echo "Running full build..."
-          mvn -f app/pom.xml clean verify -B
+- name: 🧱 Full Build (no detected modules)
+  if: steps.detect.outputs.modules == ''
+  run: |
+    echo "No modules detected — running full build (app/pom.xml)"
+    mvn -f app/pom.xml -q clean verify -B
