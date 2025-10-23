@@ -1,9 +1,7 @@
-package com.personalbanking.personaltransaction.features.featureone.service.impl;
+package com.personalbanking.personaltransaction.features.featureone.service;
 
 import com.personalbanking.personaltransaction.features.featureone.repository.FeatureOneRepository;
-import com.personalbanking.personaltransaction.features.featureone.service.FeatureOneService;
 import com.personalbanking.personaltransaction.features.nicknametransfer.models.Transaction;
-import com.personalbanking.personaltransaction.features.nicknametransfer.repository.NicknameTransferRepository;
 import com.personalbanking.personaltransaction.proto.transaction.PrepareTransactionRequest;
 import com.personalbanking.personaltransaction.proto.transaction.PrepareTransactionResponse;
 import com.personalbanking.personaltransaction.proto.transaction.TransactionServiceGrpc;
@@ -16,20 +14,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 @GrpcService
-public class TransactionServiceImpl extends TransactionServiceGrpc.TransactionServiceImplBase {
+public class TransactionService extends TransactionServiceGrpc.TransactionServiceImplBase {
 
     private final FeatureOneRepository featureOneRepository;
     private static final DateTimeFormatter DT_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Autowired
-    public TransactionServiceImpl(FeatureOneRepository featureOneRepository) {
+    public TransactionService(FeatureOneRepository featureOneRepository) {
         this.featureOneRepository = featureOneRepository;
     }
 
     @Override
     public void prepareTransaction(PrepareTransactionRequest request, StreamObserver<PrepareTransactionResponse> responseObserver) {
+
         try {
             if (request.getFromAccountId() <= 0 || request.getToAccountId() <= 0) {
                 throw status(Status.INVALID_ARGUMENT, "Account IDs must be positive");
@@ -52,7 +52,7 @@ public class TransactionServiceImpl extends TransactionServiceGrpc.TransactionSe
             String externalTxnId = featureOneRepository.prepareTransfer(
                     fromAccountOpt.get().id(),
                     toAccountOpt.get().id(),
-                    null // optional: current user ID if needed
+                    null
             );
 
             var txn = new Transaction(
@@ -85,8 +85,8 @@ public class TransactionServiceImpl extends TransactionServiceGrpc.TransactionSe
                     .withCause(e)
                     .asRuntimeException());
         }
-    }
 
+    }
     private StatusRuntimeException status(Status s, String msg) {
         return s.withDescription(msg).asRuntimeException();
     }

@@ -6,10 +6,10 @@ import com.personalbanking.personaltransaction.features.nicknametransfer.models.
 import com.personalbanking.personaltransaction.features.nicknametransfer.models.Transaction;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
 import java.util.Optional;
-
+@Repository
 public class FeatureOneRepositoryImpl implements FeatureOneRepository {
 
     private final JdbcTemplate jdbcTemplate;

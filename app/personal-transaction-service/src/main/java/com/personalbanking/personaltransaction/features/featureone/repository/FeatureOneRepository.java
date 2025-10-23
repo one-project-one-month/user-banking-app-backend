@@ -10,6 +10,4 @@ public interface FeatureOneRepository {
     String prepareTransfer(Long fromAccountId, Long toAccountId, Long userId);
     Long saveTransaction(Transaction transaction);
 
-
-
 }
