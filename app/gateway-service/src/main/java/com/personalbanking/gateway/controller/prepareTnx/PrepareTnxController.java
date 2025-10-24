@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/personal-banking/users/prepare-transaction")
-public class prepareTnxController {
+public class PrepareTnxController {
 
 @GrpcClient("personal-transaction-service")
 private com.personalbanking.personaltransaction.proto.transaction.TransactionServiceGrpc.TransactionServiceBlockingStub prepareTransactionService;
