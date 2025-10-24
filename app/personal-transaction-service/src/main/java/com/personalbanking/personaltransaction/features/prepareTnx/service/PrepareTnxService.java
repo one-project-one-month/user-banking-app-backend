@@ -1,10 +1,9 @@
-package com.personalbanking.personaltransaction.features.featureone.service;
+package com.personalbanking.personaltransaction.features.prepareTnx.service;
 
-import com.personalbanking.personaltransaction.features.featureone.repository.FeatureOneRepository;
 import com.personalbanking.personaltransaction.features.nicknametransfer.models.Transaction;
+import com.personalbanking.personaltransaction.features.prepareTnx.repo.PrepareTnxRepo;
 import com.personalbanking.personaltransaction.proto.transaction.PrepareTransactionRequest;
 import com.personalbanking.personaltransaction.proto.transaction.PrepareTransactionResponse;
-import com.personalbanking.personaltransaction.proto.transaction.TransactionServiceGrpc;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
@@ -14,20 +13,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.UUID;
 
 @GrpcService
-public class TransactionService extends TransactionServiceGrpc.TransactionServiceImplBase {
-
-    private final FeatureOneRepository featureOneRepository;
+public class PrepareTnxService {
+    private final PrepareTnxRepo prepareTnxRepo;
     private static final DateTimeFormatter DT_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Autowired
-    public TransactionService(FeatureOneRepository featureOneRepository) {
-        this.featureOneRepository = featureOneRepository;
+    public PrepareTnxService(PrepareTnxRepo prepareTnxRepo) {
+        this.prepareTnxRepo = prepareTnxRepo;
     }
 
-    @Override
     public void prepareTransaction(PrepareTransactionRequest request, StreamObserver<PrepareTransactionResponse> responseObserver) {
 
         try {
@@ -35,8 +31,8 @@ public class TransactionService extends TransactionServiceGrpc.TransactionServic
                 throw status(Status.INVALID_ARGUMENT, "Account IDs must be positive");
             }
 
-            var fromAccountOpt = featureOneRepository.findAccountByUserId(request.getFromAccountId());
-            var toAccountOpt = featureOneRepository.findAccountByUserId(request.getToAccountId());
+            var fromAccountOpt = prepareTnxRepo.findAccountByUserId(request.getFromAccountId());
+            var toAccountOpt = prepareTnxRepo.findAccountByUserId(request.getToAccountId());
 
             if (fromAccountOpt.isEmpty()) {
                 throw status(Status.NOT_FOUND, "From account not found");
@@ -49,7 +45,7 @@ public class TransactionService extends TransactionServiceGrpc.TransactionServic
                 throw status(Status.FAILED_PRECONDITION, "Cannot transfer to the same account");
             }
 
-            String externalTxnId = featureOneRepository.prepareTransfer(
+            String externalTxnId = prepareTnxRepo.prepareTransfer(
                     fromAccountOpt.get().id(),
                     toAccountOpt.get().id(),
                     null
@@ -65,7 +61,7 @@ public class TransactionService extends TransactionServiceGrpc.TransactionServic
                     LocalDateTime.now().format(DT_FMT)
             );
 
-            featureOneRepository.saveTransaction(txn);
+            prepareTnxRepo.saveTransaction(txn);
 
             var response = PrepareTransactionResponse.newBuilder()
                     .setSuccess(true)

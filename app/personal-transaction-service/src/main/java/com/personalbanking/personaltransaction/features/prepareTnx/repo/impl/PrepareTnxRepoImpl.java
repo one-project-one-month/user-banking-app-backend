@@ -1,20 +1,19 @@
-package com.personalbanking.personaltransaction.features.featureone.repository.impl;
+package com.personalbanking.personaltransaction.features.prepareTnx.repo.impl;
 
-import com.personalbanking.personaltransaction.features.featureone.repository.FeatureOneRepository;
 import com.personalbanking.personaltransaction.features.nicknametransfer.models.AccountDetail;
-import com.personalbanking.personaltransaction.features.nicknametransfer.models.Nickname;
 import com.personalbanking.personaltransaction.features.nicknametransfer.models.Transaction;
+import com.personalbanking.personaltransaction.features.prepareTnx.repo.PrepareTnxRepo;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
-@Repository
-public class FeatureOneRepositoryImpl implements FeatureOneRepository {
 
+@Repository
+public class PrepareTnxRepoImpl implements PrepareTnxRepo {
     private final JdbcTemplate jdbcTemplate;
 
-    public FeatureOneRepositoryImpl(JdbcTemplate jdbcTemplate) {this.jdbcTemplate = jdbcTemplate;}
+    public PrepareTnxRepoImpl(JdbcTemplate jdbcTemplate) {this.jdbcTemplate = jdbcTemplate;}
 
 
     private final RowMapper<Transaction> transactionRowMapper = (rs, rowNum) ->
