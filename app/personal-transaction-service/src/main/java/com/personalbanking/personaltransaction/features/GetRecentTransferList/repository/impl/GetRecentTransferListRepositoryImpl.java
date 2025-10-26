@@ -27,7 +27,7 @@ public class GetRecentTransferListRepositoryImpl implements GetRecentTransferLis
         if(userId!=null) {
             getUser=new GetUser(
                     userId,
-                    rs.getString("name")
+                    rs.getString("user_name")
             );
         }
         if(accountId!=null) {
@@ -38,7 +38,6 @@ public class GetRecentTransferListRepositoryImpl implements GetRecentTransferLis
         }
 
         return new GetRecentTransferListData(
-                rs.getLong("transfer_id"),
                 getUser,
                 getAccount
         );
@@ -48,17 +47,20 @@ public class GetRecentTransferListRepositoryImpl implements GetRecentTransferLis
     @Override
     public List<GetRecentTransferListData> findAll() {
                 String sql = """
-                                SELECT
-                                    t.id             AS transfer_id,
-                                    u.id             AS user_id,
-                                    u.name           AS name,
-                                    a.id             AS account_id,
-                                    a.account_number AS account_number
-                                FROM transfers t
-                                LEFT JOIN users u ON t.user_id = u.id
-                                LEFT JOIN accounts a ON t.account_id = a.id
-                                ORDER BY t.created_at DESC
-                                LIMIT 5
+                        SELECT
+                            t.id AS transaction_id,
+                            u.id AS user_id,
+                            u.username AS user_name,
+                            a.id AS account_id,
+                            a.account_number AS account_number
+                        
+                        FROM transactions t
+                        LEFT JOIN account_detail a\s
+                            ON t.credit_account_id = a.id   -- or debit_account_id depending on what you want
+                        LEFT JOIN users u\s
+                            ON a.user_id = u.id
+                        ORDER BY t.created_at DESC
+                        LIMIT 5;
                                 """;
         return jdbcTemplate.query(sql,getRecentTransferListRowMapper);
     }

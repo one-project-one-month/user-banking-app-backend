@@ -41,6 +41,19 @@ CREATE TABLE IF NOT EXISTS transactions (
     CONSTRAINT fk_tx_debit FOREIGN KEY (debit_account_id) REFERENCES account_detail(id)
     );
 
+CREATE TABLE IF NOT EXISTS users (
+    id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    profile_id BIGINT,
+    role_id BIGINT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by BIGINT,
+    updated_by BIGINT
+    );
+
 CREATE INDEX IF NOT EXISTS idx_account_detail_user_id ON account_detail(user_id);
 CREATE INDEX IF NOT EXISTS idx_account_detail_nickname_id ON account_detail(nickname_id);
 CREATE INDEX IF NOT EXISTS idx_bank_tx_status ON transactions(status);
