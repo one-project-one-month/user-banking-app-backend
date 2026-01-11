@@ -12,6 +12,6 @@ RUN ls -R /root/.m2/repository/com/corporatebanking
 FROM eclipse-temurin:17-jre
 WORKDIR /app
 
-COPY --from=build /app/app/gateway-service/target/*.jar app.jar
+COPY --from=build /app/target/*.jar app.jar
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
